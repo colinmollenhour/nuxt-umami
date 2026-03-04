@@ -12,22 +12,35 @@ export default defineNuxtPlugin({
     if (useDirective)
       nuxtApp.vueApp.directive('umami', directive);
     if (autoTrack) {
+      // Track the last path we fired a pageview for so that apps using nested
+      // <NuxtPage> components (which cause `page:finish` to fire multiple times
+      // per navigation) only record a single pageview per route change.
+      let lastTrackedPath: string | undefined;
+      let pendingTimer: ReturnType<typeof setTimeout> | undefined;
+
       nuxtApp.hook('page:finish', () => {
-        setTimeout(umTrackView, 250);
+        const currentPath = nuxtApp.$router.currentRoute.value.fullPath;
 
-        // TODO: fix
-        // `useHead()` updates the DOM's head using this hook
-        // currently, there is no hook we can watch, so we need
-        // to wait for the update to finish, to capture title
+        if (currentPath === lastTrackedPath)
+          return;
 
-        // TODO: update
-        // `page:loading:end` hook sounds like the fix for this,
-        // but the hook currently runs twice [bug: #26535]
+        // Debounce: if multiple `page:finish` events fire in rapid succession
+        // for the same navigation (e.g. nested layouts), only track once.
+        clearTimeout(pendingTimer);
+        pendingTimer = setTimeout(() => {
+          // Re-check in case another navigation started while we were waiting.
+          const path = nuxtApp.$router.currentRoute.value.fullPath;
+          if (path === lastTrackedPath)
+            return;
+          lastTrackedPath = path;
+          umTrackView();
 
-        // TODO: also
-        // injectHead().hooks.hook('dom:rendered', () => {})
-        // works flawlessly as long as the page is having its head
-        // rendered, if only there was a way to ALWAYS call that hook ;)
+          // NOTE: The setTimeout is a workaround for `useHead()` updating the
+          // page title asynchronously via the same `page:finish` hook. Without
+          // it we'd capture the previous page's title.
+          // `page:loading:end` would be cleaner but fired twice until Nuxt
+          // bug #26535 is resolved.
+        }, 250);
       });
     }
   },
