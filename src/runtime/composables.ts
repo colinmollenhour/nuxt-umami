@@ -14,6 +14,7 @@ import { earlyPromise, flattenObject, isValidString } from './utils';
 let configChecks: PreflightResult | undefined;
 let staticPayload: StaticPayload | undefined;
 let queryRef: string | undefined;
+let queryRefConsumed = false;
 
 function runPreflight(): PreflightResult {
   if (typeof window === 'undefined')
@@ -65,13 +66,23 @@ function getStaticPayload(): StaticPayload {
 }
 
 function getQueryRef(): string {
-  if (typeof queryRef === 'string')
-    return queryRef;
+  // Only read and use the URL referral param once (on the landing page).
+  // After the first pageview is tracked, reset it so subsequent SPA
+  // navigations don't keep attributing all views to the original referrer.
+  if (queryRefConsumed)
+    return '';
 
-  const params = new URL(window.location.href).searchParams;
-  queryRef = params.get('referrer') || params.get('ref') || '';
+  if (typeof queryRef !== 'string') {
+    const params = new URL(window.location.href).searchParams;
+    queryRef = params.get('referrer') || params.get('ref') || '';
+  }
 
   return queryRef;
+}
+
+function consumeQueryRef(): void {
+  queryRefConsumed = true;
+  queryRef = '';
 }
 
 function getPayload(): ViewPayload {
@@ -111,7 +122,7 @@ function umTrackView(path?: string, referrer?: string): FetchResult {
 
   const url = buildPathUrl(isValidString(path) ? path : null);
 
-  return collect({
+  const result = collect({
     type: 'event',
     payload: {
       ...getPayload(),
@@ -119,6 +130,12 @@ function umTrackView(path?: string, referrer?: string): FetchResult {
       ...(isValidString(referrer) && { referrer }),
     } satisfies ViewPayload,
   });
+
+  // Consume the landing-page URL referral param after the first tracked view
+  // so subsequent SPA navigations don't keep attributing to the same referrer.
+  consumeQueryRef();
+
+  return result;
 }
 
 /**
