@@ -167,6 +167,12 @@ function umTrackEvent(eventName: string, eventData?: EventData): FetchResult {
     logger('event-name');
     name = '#unknown-event';
   }
+  else if (eventName.length > 50) {
+    // Umami silently truncates names server-side; warn the developer and
+    // truncate here so what we log matches what Umami actually records.
+    logger('event-name-length');
+    name = eventName.slice(0, 50);
+  }
 
   return collect({
     type: 'event',

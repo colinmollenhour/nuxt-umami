@@ -1,7 +1,7 @@
 import type { PreflightResult } from '../types';
 
 type PreflightErrId = Exclude<PreflightResult, 'ssr' | true>
-  | 'collect' | 'directive' | 'event-name' | 'endpoint' | 'id'
+  | 'collect' | 'directive' | 'event-name' | 'event-name-length' | 'endpoint' | 'id'
   | 'enabled' | 'currency' | 'revenue';
 type LogLevel = 'info' | 'warn' | 'error';
 interface ErrorObj {
@@ -19,6 +19,7 @@ const warnings: Record<PreflightErrId, ErrorObj> = {
   'collect': { level: 'error', text: 'Uhm... Something went wrong and I have no clue.' },
   'directive': { level: 'error', text: 'Invalid v-umami directive value. Expected string or object with {key:value} pairs. See https://umami.nuxt.dev/api/usage#directive' },
   'event-name': { level: 'warn', text: 'An Umami track event was fired without a name. `#unknown-event` will be used as event name.' },
+  'event-name-length': { level: 'warn', text: 'Umami event names are limited to 50 characters. The name will be truncated.' },
   'currency': { level: 'warn', text: 'Invalid currency passed. Expected ISO 4217 format. See https://en.wikipedia.org/wiki/ISO_4217#List_of_ISO_4217_currency_codes' },
   'revenue': { level: 'error', text: 'Revenue is not a number. Expected number, got: ' },
 };
