@@ -7,6 +7,7 @@ import {
   addTemplate,
   createResolver,
   defineNuxtModule,
+  useLogger,
 } from '@nuxt/kit';
 import { name, version } from '../package.json';
 import { isValidString, normalizeConfig } from './runtime/utils';
@@ -22,6 +23,7 @@ export default defineNuxtModule<ModuleOptions>({
     },
   },
   setup(options, nuxt) {
+    const logger = useLogger('nuxt-umami');
     const { resolve } = createResolver(import.meta.url);
 
     const pathTo = {
@@ -105,18 +107,18 @@ export default defineNuxtModule<ModuleOptions>({
     else {
       // ^ module is disabled || host/id has errors
       if (!id)
-        console.warn('[umami] id is missing or incorrectly configured. Check module config.');
+        logger.warn('id is missing or incorrectly configured. Check module config.');
       if (!endpoint) {
-        console.warn(
-          '[umami] Your API endpoint is missing or incorrectly configured. Check `host` and/or `customEndpoint` in module config.',
+        logger.warn(
+          'Your API endpoint is missing or incorrectly configured. Check `host` and/or `customEndpoint` in module config.',
         );
       }
 
-      console.info(`[umami] ${
+      logger.info(
         enabled
           ? 'Currently running in test mode due to incorrect/missing options.'
-          : 'Umami is disabled.'
-      }`);
+          : 'Umami is disabled.',
+      );
     }
 
     // add private config to runtime, only usable in server

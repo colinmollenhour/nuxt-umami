@@ -13,7 +13,6 @@ export default defineEventHandler(async (event) => {
 
   // invalid data, throw error
   if (!result.success) {
-    console.log('[nuxt-umami-endpoint]: invalid data', result.output);
     throw createError({
       statusCode: 400,
       statusMessage: 'Invalid data.',
