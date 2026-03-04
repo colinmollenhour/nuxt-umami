@@ -28,6 +28,7 @@ interface UmPublicConfig extends _PublicConfig {
 interface UmPrivateConfig {
   website: string;
   endpoint: string;
+  domains: Array<string> | null;
 }
 
 type PreflightResult = true | 'ssr' | 'domain' | 'localhost' | 'local-storage';

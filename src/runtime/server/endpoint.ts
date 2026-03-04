@@ -21,7 +21,11 @@ export default defineEventHandler(async (event) => {
   }
 
   // grab config and host from runtimeConfig
-  const { endpoint, website, domains } = useRuntimeConfig()._proxyUmConfig;
+  const { endpoint, website, domains } = useRuntimeConfig().umami as {
+    endpoint: string;
+    website: string;
+    domains: string[] | null;
+  };
 
   // request headers
   const headers = getHeaders(event);

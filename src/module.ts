@@ -1,5 +1,5 @@
 import type { ModuleOptions } from './options';
-import type { ModuleMode, NormalizedModuleOptions, UmPublicConfig } from './types';
+import type { ModuleMode, NormalizedModuleOptions, UmPrivateConfig, UmPublicConfig } from './types';
 import {
   addImports,
   addPlugin,
@@ -67,7 +67,7 @@ export default defineNuxtModule<ModuleOptions>({
       endpoint: '',
     } satisfies UmPublicConfig;
 
-    const privateConfig = { endpoint: '', website: '', domains };
+    const privateConfig: UmPrivateConfig = { endpoint: '', website: '', domains };
 
     let mode: ModuleMode = 'faux';
     const proxyOpts: Array<NormalizedModuleOptions['proxy']> = ['direct', 'cloak'];
@@ -120,7 +120,8 @@ export default defineNuxtModule<ModuleOptions>({
     }
 
     // add private config to runtime, only usable in server
-    runtimeConfig._proxyUmConfig = privateConfig;
+    // typed via UmPrivateConfig; accessed in server handler as useRuntimeConfig().umami
+    runtimeConfig.umami = privateConfig as unknown as typeof runtimeConfig.umami;
 
     // generate utils template
     addTemplate({
