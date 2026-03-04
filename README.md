@@ -53,9 +53,9 @@ npm install github:colinmollenhour/nuxt-umami#v3.3.0
 yarn add github:colinmollenhour/nuxt-umami#v3.3.0
 ```
 
-Or pin to the release zip for reproducible installs:
+Or pin to the release tarball for reproducible installs:
 ```sh
-pnpm add https://github.com/colinmollenhour/nuxt-umami/releases/download/v3.3.0/nuxt-umami-v3.3.0.zip
+pnpm add https://github.com/colinmollenhour/nuxt-umami/releases/download/v3.3.0/nuxt-umami-v3.3.0.tgz
 ```
 
 > **Note:** Because this fork is not published to npm, `npx nuxi module add` will not
@@ -130,8 +130,8 @@ Use this prompt when setting up this module in a new project:
 > installation differs from the official docs.
 >
 > **Install:**
-> ```sh
-> pnpm add https://github.com/colinmollenhour/nuxt-umami/releases/download/v3.3.0/nuxt-umami-v3.3.0.zip
+ > ```sh
+> pnpm add https://github.com/colinmollenhour/nuxt-umami/releases/download/v3.3.0/nuxt-umami-v3.3.0.tgz
 > ```
 >
 > **Register in `nuxt.config.ts`** (do NOT use `npx nuxi module add` — it only works for
