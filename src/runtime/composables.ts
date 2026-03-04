@@ -271,8 +271,8 @@ function umTrackRevenue(
 
   let $cur: string | null = null;
 
-  if (typeof currency === 'string' && /^[A-Z]{3}$/i.test(currency.trim()))
-    $cur = currency.trim();
+  if (typeof currency === 'string' && /^[A-Z]{3}$/.test(currency.trim().toUpperCase()))
+    $cur = currency.trim().toUpperCase();
   else
     logger('currency', `Got: ${currency}`);
 
