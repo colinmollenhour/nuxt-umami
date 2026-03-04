@@ -15,6 +15,7 @@ let configChecks: PreflightResult | undefined;
 let staticPayload: StaticPayload | undefined;
 let queryRef: string | undefined;
 let queryRefConsumed = false;
+let identifyId: string | undefined;
 
 function runPreflight(): PreflightResult {
   if (typeof window === 'undefined')
@@ -96,6 +97,9 @@ function getPayload(): ViewPayload {
   return {
     ...getStaticPayload(),
     ...(tag ? { tag } : null),
+    // Auto-include the distinct ID on all payloads after umIdentify is called,
+    // matching the behaviour of the official Umami tracker script.
+    ...(identifyId ? { id: identifyId } : null),
     url,
     title,
     referrer: ref,
@@ -175,16 +179,29 @@ function umTrackEvent(eventName: string, eventData?: EventData): FetchResult {
 }
 
 /**
- * Save data about the current session.
+ * Save data about the current session and optionally identify the user.
  *
- * Umami now supports saving session data, and
- * it works very similarly to custom event data.
+ * Supports three call signatures matching the official Umami tracker:
+ * - `umIdentify(uniqueId)` — set a distinct user ID (Umami v2.18.0+)
+ * - `umIdentify(uniqueId, sessionData)` — set ID and session data together
+ * - `umIdentify(sessionData)` — set session data only (original behaviour)
+ *
+ * The distinct ID is stored in a module-level closure and automatically
+ * included in all subsequent event and pageview payloads, matching the
+ * behaviour of the official Umami tracker script.
+ *
  * @see [v2.13.0 release](https://github.com/umami-software/umami/releases/tag/v2.13.0)
+ * @see [Umami Docs — Identify](https://umami.is/docs/tracker-functions)
  *
- * @param sessionData data for this session, provide an object in the format
- * `{key: value}`, where `key` = `string`, `value` = `string | number | boolean`.
+ * @param uniqueIdOrData distinct user ID string (max 50 chars) **or** session data object
+ * @param sessionData session data when first arg is a distinct ID
  */
-function umIdentify(sessionData?: EventData): FetchResult {
+function umIdentify(uniqueId: string, sessionData?: EventData): FetchResult;
+function umIdentify(sessionData?: EventData): FetchResult;
+function umIdentify(
+  uniqueIdOrData?: string | EventData,
+  sessionData?: EventData,
+): FetchResult {
   const check = runPreflight();
 
   if (check === 'ssr')
@@ -195,13 +212,30 @@ function umIdentify(sessionData?: EventData): FetchResult {
     return earlyPromise(false);
   }
 
-  const data = flattenObject(sessionData);
+  let id: string | undefined;
+  let data: ReturnType<typeof flattenObject>;
+
+  if (typeof uniqueIdOrData === 'string') {
+    // umIdentify(uniqueId) or umIdentify(uniqueId, sessionData)
+    id = uniqueIdOrData.trim().slice(0, 50) || undefined;
+    data = flattenObject(sessionData);
+  }
+  else {
+    // umIdentify(sessionData) — original behaviour
+    data = flattenObject(uniqueIdOrData ?? undefined);
+  }
+
+  // Persist the distinct ID so all subsequent tracking calls include it,
+  // matching the official Umami tracker script's identify() behaviour.
+  if (id)
+    identifyId = id;
 
   return collect({
     type: 'identify',
     payload: {
       ...getPayload(),
-      ...(data && { data }),
+      ...(id ? { id } : null),
+      ...(data ? { data } : null),
     } satisfies IdentifyPayload,
   });
 }

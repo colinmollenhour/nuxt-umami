@@ -42,6 +42,8 @@ interface StaticPayload {
   language: string;
   hostname: string;
   tag?: string;
+  /** Distinct user ID set via umIdentify(). Auto-included in all payloads. */
+  id?: string;
 }
 
 interface ViewPayload extends StaticPayload {
@@ -56,6 +58,8 @@ interface EventPayload extends ViewPayload {
 };
 
 interface IdentifyPayload extends ViewPayload {
+  /** Distinct user ID (max 50 chars). Added in Umami v2.18.0. */
+  id?: string;
   data?: Record<string, unknown>;
 }
 

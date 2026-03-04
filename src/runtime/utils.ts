@@ -119,7 +119,7 @@ const validatorFns = {
 } as const;
 
 type PropertyValidator = keyof typeof validatorFns;
-type Payload = ViewPayload & EventPayload;
+type Payload = ViewPayload & EventPayload & { id?: string };
 
 const _payloadProps: Record<keyof Payload, PropertyValidator> = {
   hostname: 'nonempty',
@@ -131,6 +131,7 @@ const _payloadProps: Record<keyof Payload, PropertyValidator> = {
   tag: 'skip', // optional property
   name: 'skip', // optional, 'nonempty' in EventPayload
   data: 'skip', // optional, 'data' in EventPayload & IdentifyPayload
+  id: 'skip', // optional, distinct user ID in IdentifyPayload (Umami v2.18.0+)
 } as const;
 
 const _payloadType: PayloadTypes = ['event', 'identify'];
@@ -169,6 +170,12 @@ function isValidPayload(obj: object): obj is Payload {
   if (objKeys.includes('tag')) {
     validatorKeys.push('tag');
     validators.tag = 'string';
+  }
+
+  // optional distinct user ID (umIdentify with id, Umami v2.18.0+)
+  if (objKeys.includes('id')) {
+    validatorKeys.push('id');
+    validators.id = 'nonempty';
   }
 
   // check: all keys are present, no more, no less
