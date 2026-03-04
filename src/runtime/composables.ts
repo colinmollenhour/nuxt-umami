@@ -8,7 +8,9 @@ import type {
   StaticPayload,
   ViewPayload,
 } from '../types';
-import { buildPathUrl, collect, config, logger } from '#build/umami.config.mjs';
+import { buildPathUrl, collect } from '#build/umami.config.mjs';
+import { useRuntimeConfig } from '#imports';
+import { logger } from './logger';
 import { earlyPromise, flattenObject, isValidString } from './utils';
 
 let configChecks: PreflightResult | undefined;
@@ -29,7 +31,7 @@ function runPreflight(): PreflightResult {
     return configChecks;
 
   configChecks = (function (): PreflightResult {
-    const { ignoreLocalhost, domains } = config;
+    const { ignoreLocalhost, domains } = useRuntimeConfig().public.umami;
     const hostname = window.location.hostname;
 
     if (ignoreLocalhost && hostname === 'localhost')
@@ -54,7 +56,7 @@ function getStaticPayload(): StaticPayload {
     navigator: { language },
   } = window;
 
-  const { tag } = config;
+  const { tag } = useRuntimeConfig().public.umami;
 
   staticPayload = {
     hostname,

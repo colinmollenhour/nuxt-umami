@@ -1,18 +1,22 @@
-import type { ModuleMode, UmPublicConfig } from './types';
+import type { ModuleMode, NormalizedModuleOptions } from './types';
 
 interface TemplateOptions {
   options: {
     mode: ModuleMode;
-    config: UmPublicConfig & { logErrors: boolean };
     path: {
       utils: string;
       types: string;
       logger: string;
     };
+    urlOptions: Required<Required<NormalizedModuleOptions>['urlOptions']>;
+    logErrors: boolean;
   };
 };
 
-const fn_faux = `const payload = load.payload;
+// In faux mode: log config errors and bail out immediately.
+// Reads enabled/endpoint/website from runtimeConfig at call time.
+const fn_faux = `const { enabled, endpoint, website } = useRuntimeConfig().public.umami;
+  const payload = load.payload;
 
   if (enabled) {
     if (!endpoint)
@@ -26,6 +30,7 @@ const fn_faux = `const payload = load.payload;
   logger('enabled');
   return Promise.resolve({ ok: true });`;
 
+// In proxy (cloak) mode: forward to /api/savory (server handler reads real endpoint from private runtimeConfig).
 const fn_proxy = `return ofetch('/api/savory', {
     method: 'POST',
     body: { ...load, cache },
@@ -33,7 +38,9 @@ const fn_proxy = `return ofetch('/api/savory', {
     .then(handleSuccess)
     .catch(handleError);`;
 
+// In direct mode: read endpoint/website from public runtimeConfig at call time.
 const fn_direct = `const { type, payload } = load;
+  const { endpoint, website } = useRuntimeConfig().public.umami;
 
   return ofetch(endpoint, {
     method: 'POST',
@@ -47,28 +54,19 @@ const fn_direct = `const { type, payload } = load;
 const collectFn: Record<`fn_${ModuleMode}`, string> = { fn_direct, fn_faux, fn_proxy };
 
 function generateTemplate({
-  options: { mode, path, config: { logErrors, ...config } },
+  options: { mode, path, urlOptions, logErrors },
 }: TemplateOptions) {
   return `// template-generated
 import { ofetch } from 'ofetch';
-import { ${logErrors ? 'logger' : 'fauxLogger'} as $logger } from "${path.logger}";
+import { useRuntimeConfig } from '#imports';
+import { ${logErrors ? 'logger' : 'fauxLogger'} as logger } from "${path.logger}";
 
 /**
  * @typedef {import("${path.types}").FetchFn} FetchFn
  * 
  * @typedef {import("${path.types}").BuildPathUrlFn} BuildPathUrlFn
- * 
- * @typedef {import("${path.types}").UmPublicConfig} UmPublicConfig
  */
 
-export const logger = $logger;
-
-/**
- * @type UmPublicConfig
-*/
-export const config = ${JSON.stringify(config, null, 2)};
-
-const { endpoint, website, enabled } = config;
 let cache = '';
 
 function handleError(err) {
@@ -100,12 +98,12 @@ export function buildPathUrl(loc) {
     const url = new URL(loc, window.location.href);
     const path = url.pathname;
   
-    ${config.urlOptions.excludeHash && `url.hash = '';`}
-    ${config.urlOptions.excludeSearch && `url.search = '';`}
+    ${urlOptions.excludeHash && `url.hash = '';`}
+    ${urlOptions.excludeSearch && `url.search = '';`}
   
-    url.pathname = ${config.urlOptions.trailingSlash === 'always'
+    url.pathname = ${urlOptions.trailingSlash === 'always'
       ? `path.endsWith('/') ? path : path + '/'`
-      : config.urlOptions.trailingSlash === 'never'
+      : urlOptions.trailingSlash === 'never'
         ? `path.endsWith('/') ? path.slice(0, -1) : path`
         : `path`};
   

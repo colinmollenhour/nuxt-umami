@@ -1,14 +1,13 @@
-import { defineNuxtPlugin } from '#app';
-import { config } from '#build/umami.config.mjs';
+import { defineNuxtPlugin, useRouter, useRuntimeConfig } from '#app';
 import { umTrackView } from './composables';
 import { directive } from './directive';
-
-const { useDirective, autoTrack } = config;
 
 export default defineNuxtPlugin({
   name: 'umami-tracker',
   parallel: true,
   async setup(nuxtApp) {
+    const { useDirective, autoTrack } = useRuntimeConfig().public.umami;
+
     if (useDirective)
       nuxtApp.vueApp.directive('umami', directive);
     if (autoTrack) {
@@ -18,8 +17,10 @@ export default defineNuxtPlugin({
       let lastTrackedPath: string | undefined;
       let pendingTimer: ReturnType<typeof setTimeout> | undefined;
 
+      const router = useRouter();
+
       nuxtApp.hook('page:finish', () => {
-        const currentPath = nuxtApp.$router.currentRoute.value.fullPath;
+        const currentPath = router.currentRoute.value.fullPath;
 
         if (currentPath === lastTrackedPath)
           return;
@@ -29,7 +30,7 @@ export default defineNuxtPlugin({
         clearTimeout(pendingTimer);
         pendingTimer = setTimeout(() => {
           // Re-check in case another navigation started while we were waiting.
-          const path = nuxtApp.$router.currentRoute.value.fullPath;
+          const path = router.currentRoute.value.fullPath;
           if (path === lastTrackedPath)
             return;
           lastTrackedPath = path;

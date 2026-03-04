@@ -23,6 +23,9 @@ type _PublicConfig = Omit<
 interface UmPublicConfig extends _PublicConfig {
   website: string;
   endpoint: string;
+  /** Determines which collect() implementation to use at runtime */
+  mode: ModuleMode;
+  logErrors: boolean;
 }
 
 interface UmPrivateConfig {
@@ -83,6 +86,15 @@ type CurrencyCode = Uppercase<`${_Letter}${_Letter}${_Letter}`>;
 type Prettify<T> = {
   [K in keyof T]: T[K];
 } & {};
+
+declare module 'nuxt/schema' {
+  interface PublicRuntimeConfig {
+    umami: UmPublicConfig;
+  }
+  interface RuntimeConfig {
+    umami: UmPrivateConfig;
+  }
+}
 
 export type {
   BuildPathUrlFn,

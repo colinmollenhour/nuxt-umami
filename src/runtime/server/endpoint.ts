@@ -19,12 +19,8 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  // grab config and host from runtimeConfig
-  const { endpoint, website, domains } = useRuntimeConfig().umami as {
-    endpoint: string;
-    website: string;
-    domains: string[] | null;
-  };
+  // grab config from runtimeConfig — fully typed via module augmentation in types.ts
+  const { endpoint, website, domains } = useRuntimeConfig().umami;
 
   // request headers
   const headers = getHeaders(event);

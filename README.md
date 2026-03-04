@@ -40,22 +40,22 @@ This fork adds several bug fixes and improvements on top of the upstream
 
 **pnpm**
 ```sh
-pnpm add github:colinmollenhour/nuxt-umami#v3.3.0
+pnpm add github:colinmollenhour/nuxt-umami#v3.4.0
 ```
 
 **npm**
 ```sh
-npm install github:colinmollenhour/nuxt-umami#v3.3.0
+npm install github:colinmollenhour/nuxt-umami#v3.4.0
 ```
 
 **yarn**
 ```sh
-yarn add github:colinmollenhour/nuxt-umami#v3.3.0
+yarn add github:colinmollenhour/nuxt-umami#v3.4.0
 ```
 
 Or pin to the release tarball for reproducible installs:
 ```sh
-pnpm add https://github.com/colinmollenhour/nuxt-umami/releases/download/v3.3.0/nuxt-umami-v3.3.0.tgz
+pnpm add https://github.com/colinmollenhour/nuxt-umami/releases/download/v3.4.0/nuxt-umami-v3.4.0.tgz
 ```
 
 > **Note:** Because this fork is not published to npm, `npx nuxi module add` will not
@@ -88,17 +88,17 @@ All composables are auto-imported. See [umami.nuxt.dev/api/usage](https://umami.
 
 ```ts
 // Track a page view (called automatically if autoTrack: true)
-umTrackView()
+umTrackView();
 
 // Track a named event with optional data
-umTrackEvent('signup-click', { plan: 'pro' })
+umTrackEvent('signup-click', { plan: 'pro' });
 
 // Identify an authenticated user (SaaS portal use case)
-umIdentify('[email protected]')
-umIdentify('[email protected]', { plan: 'pro', company: 'Acme' })
+umIdentify('[email protected]');
+umIdentify('[email protected]', { plan: 'pro', company: 'Acme' });
 
 // Track revenue
-umTrackRevenue('subscription', 49, 'USD')
+umTrackRevenue('subscription', 49, 'USD');
 ```
 
 ### Fork changes vs upstream v3.2.1
@@ -115,6 +115,7 @@ umTrackRevenue('subscription', 49, 'USD')
 | Runtime config typing | `runtimeConfig.umami` is now properly typed (was untyped `_proxyUmConfig`) |
 | Structured logging | Module setup uses `useLogger` from `@nuxt/kit` instead of `console.warn` |
 | Proxy validator | Body key-count check removed; forward-compatible with Umami API additions |
+| Runtime env vars | Config moved to Nuxt `runtimeConfig`; `NUXT_PUBLIC_UMAMI_*` / `NUXT_UMAMI_*` now override at server start (not build time) |
 
 ---
 
@@ -131,7 +132,7 @@ Use this prompt when setting up this module in a new project:
 >
 > **Install:**
  > ```sh
-> pnpm add https://github.com/colinmollenhour/nuxt-umami/releases/download/v3.3.0/nuxt-umami-v3.3.0.tgz
+> pnpm add https://github.com/colinmollenhour/nuxt-umami/releases/download/v3.4.0/nuxt-umami-v3.4.0.tgz
 > ```
 >
 > **Register in `nuxt.config.ts`** (do NOT use `npx nuxi module add` — it only works for
@@ -145,13 +146,19 @@ Use this prompt when setting up this module in a new project:
 >     autoTrack: true,
 >     proxy: 'cloak',
 >   },
-> })
+> });
 > ```
 >
-> **Environment variables** (add to `.env` and your deployment secrets):
+> **Environment variables** — set at build time in `nuxt.config.ts` (`host`/`id`) or override
+> at server start with these env vars (no rebuild needed):
 > ```
-> NUXT_UMAMI_ID=your-website-id
-> NUXT_UMAMI_HOST=https://your-umami-instance.example.com
+> # proxy: false or proxy: 'direct' (public — visible in client bundle)
+> NUXT_PUBLIC_UMAMI_WEBSITE=your-website-id
+> NUXT_PUBLIC_UMAMI_ENDPOINT=https://your-umami-instance.example.com/api/send
+>
+> # proxy: 'cloak' (server-only — never exposed to the client)
+> NUXT_UMAMI_WEBSITE=your-website-id
+> NUXT_UMAMI_ENDPOINT=https://your-umami-instance.example.com/api/send
 > ```
 >
 > **Auto-imported composables** (no imports needed in `<script setup>`):
