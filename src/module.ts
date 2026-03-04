@@ -18,7 +18,7 @@ export default defineNuxtModule<ModuleOptions>({
     version,
     configKey: 'umami',
     compatibility: {
-      nuxt: '>=3',
+      nuxt: '>=3.0.0',
     },
   },
   setup(options, nuxt) {
