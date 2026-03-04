@@ -207,11 +207,12 @@ function parseEventBody(body: unknown): ValidatePayloadReturn {
     output: body,
   } satisfies ValidatePayloadReturn;
 
-  // check: is record, no extra keys
-  if (!isRecord(body) || Object.keys(body).length !== _bodyProps.length)
+  // check: is record and all required top-level properties are present
+  // (intentionally not checking for extra keys so forward-compatible with
+  // future Umami API additions)
+  if (!isRecord(body))
     return error;
 
-  // check: top-level properties
   if (!(
     'type' in body && isValidString(body.type)
     && 'cache' in body && typeof body.cache === 'string'
