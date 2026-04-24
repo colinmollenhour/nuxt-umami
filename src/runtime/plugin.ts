@@ -1,15 +1,19 @@
 import { defineNuxtPlugin, useRouter, useRuntimeConfig } from '#app';
-import { umTrackView } from './composables';
+import { startPerformanceTracking, umTrackView } from './composables';
 import { directive } from './directive';
 
 export default defineNuxtPlugin({
   name: 'umami-tracker',
   parallel: true,
   async setup(nuxtApp) {
-    const { useDirective, autoTrack } = useRuntimeConfig().public.umami;
+    const { useDirective, autoTrack, performance } = useRuntimeConfig().public.umami;
 
     if (useDirective)
       nuxtApp.vueApp.directive('umami', directive);
+
+    if (performance)
+      startPerformanceTracking();
+
     if (autoTrack) {
       // Track the last path we fired a pageview for so that apps using nested
       // <NuxtPage> components (which cause `page:finish` to fire multiple times
